@@ -328,7 +328,7 @@
         .btn-warning { background: var(--secondary); color: white; }
 
         /* --- 結算畫面 --- */
-        .summary-box { text-align: center; width: 100%; }
+        .summary-box { text-align: center; width: 100%; background: white; padding: 20px; border-radius: 12px; }
         .score-circle {
             width: 120px; height: 120px;
             border-radius: 50%;
@@ -357,7 +357,7 @@
             border: 1px solid #ddd; padding: 10px; text-align: center; vertical-align: middle;
         }
         .history-table th { background-color: #f1f8e9; color: #33691e; }
-        .history-img { max-height: 50px; border-radius: 4px; border: 1px solid #eee; }
+        .history-img { max-height: 50px; border-radius: 4px; border: 1px solid #eee; background-color: #fff; }
 
         /* 自訂訊息框 (替代 alert) */
         #msg-box {
@@ -475,8 +475,8 @@
             </div>
             
             <div class="controls">
-                <button class="btn btn-primary" id="btn-copy-report" onclick="copyReport()">📋 複製成績單給老師</button>
-                <button class="btn btn-warning" id="btn-download-img" style="display:none;" onclick="downloadImageReport()">🖼️ 下載成績單圖片交功課</button>
+                <button class="btn btn-primary" id="btn-copy-report" onclick="copyTextReport()">📋 複製成績單給老師</button>
+                <button class="btn btn-warning" id="btn-download-img" style="display:none;" onclick="downloadImageReport()">🖼️ 下載成績單圖片</button>
                 <button class="btn btn-secondary" onclick="resetCurrentMode()">🔄 再挑戰一次</button>
                 <button class="btn" id="btn-switch-mode" style="background: #9b59b6; color: white;" onclick="switchOppositeMode()">➡️ 嘗試另一模式</button>
             </div>
@@ -907,113 +907,115 @@
         document.getElementById('summary-score').innerText = `${percentage}%`;
         document.getElementById('summary-text').innerText = `你在「${modeName}」模式中，答對了 ${score} / ${totalQ} 題。`;
 
+        // 構建純文字報告
+        const reportTextarea = document.getElementById('report-text');
+        let reportContent = `📝 【測驗成績單】\n模式：${modeName}\n分數：${score} / ${totalQ} (${percentage}%)\n`;
+        const now = new Date();
+        reportContent += `完成時間：${now.toLocaleString('zh-HK')}\n\n`;
+
+        if (mistakes.length > 0) {
+            reportContent += `📉 建議重溫以下項目：\n`;
+            mistakes.forEach((m, i) => {
+                reportContent += `${i + 1}. ${m}\n`;
+            });
+        } else {
+            reportContent += `🎉 太棒了！全部答對，完美過關！\n`;
+        }
+        reportTextarea.value = reportContent;
+
+        // 處理視覺化報告 (默書模式)
         const visualReportContainer = document.getElementById('visual-report-container');
-        const btnCopyReport = document.getElementById('btn-copy-report');
         const btnDownloadImg = document.getElementById('btn-download-img');
-        const btnSwitchMode = document.getElementById('btn-switch-mode');
+        const historyTbody = document.getElementById('history-tbody');
 
         if (mode === 'dictation') {
             visualReportContainer.style.display = 'block';
-            btnDownloadImg.style.display = 'block';
-            btnCopyReport.style.display = 'none'; 
-            document.getElementById('report-text').style.display = 'none'; 
-            btnSwitchMode.innerText = "➡️ 去挑戰【概念選擇題】";
+            btnDownloadImg.style.display = 'inline-block';
+            historyTbody.innerHTML = ''; // 清空舊資料
 
-            const tbody = document.getElementById('history-tbody');
-            tbody.innerHTML = '';
             dicRecords.forEach(record => {
                 const tr = document.createElement('tr');
+                const statusStr = record.isCorrect ? '<span style="color: #27ae60;">✅</span>' : '<span style="color: #e74c3c;">❌</span>';
+                const imgSrc = record.image ? `<img src="${record.image}" class="history-img" alt="手寫圖片">` : '<span style="color:#999;">未作答</span>';
                 
-                const tdWord = document.createElement('td');
-                tdWord.innerText = record.word;
-                tdWord.style.fontWeight = 'bold';
-                
-                const tdImg = document.createElement('td');
-                if (record.image) {
-                    const img = document.createElement('img');
-                    img.src = record.image;
-                    img.className = 'history-img';
-                    tdImg.appendChild(img);
-                } else {
-                    tdImg.innerText = "未作答";
-                }
-                
-                const tdStatus = document.createElement('td');
-                tdStatus.innerHTML = record.isCorrect ? '✅<br><small style="color:gray;">(自稱對)</small>' : '❌<br><small style="color:gray;">(自稱錯)</small>';
-                
-                tr.appendChild(tdWord);
-                tr.appendChild(tdImg);
-                tr.appendChild(tdStatus);
-                tbody.appendChild(tr);
+                tr.innerHTML = `
+                    <td style="font-weight: bold; font-size: 18px;">${record.word}</td>
+                    <td>${imgSrc}</td>
+                    <td style="font-size: 24px;">${statusStr}</td>
+                `;
+                historyTbody.appendChild(tr);
             });
-
         } else {
             visualReportContainer.style.display = 'none';
             btnDownloadImg.style.display = 'none';
-            btnCopyReport.style.display = 'block';
-            document.getElementById('report-text').style.display = 'block';
-            btnSwitchMode.innerText = "➡️ 去挑戰【手寫默書】";
         }
-
-        const dateStr = new Date().toLocaleString('zh-HK');
-        let reportStr = `📝 語文互動溫習成績單\n`;
-        reportStr += `時間：${dateStr}\n`;
-        reportStr += `模式：${modeName}\n`;
-        reportStr += `成績：${score} / ${totalQ} (${percentage}%)\n`;
-        
-        if (mistakes.length > 0) {
-            reportStr += `\n⚠️ 需要溫習的錯題：\n`;
-            mistakes.forEach(m => reportStr += `- ${m}\n`);
-        } else {
-            reportStr += `\n🌟 太棒了！全部正確！\n`;
-        }
-        
-        document.getElementById('report-text').value = reportStr;
-        
-        // 監聽姓名輸入更新報告
-        document.getElementById('student-name').addEventListener('input', function() {
-            const name = this.value || "未命名學生";
-            let newReport = reportStr;
-            newReport = `👤 學生：${name}\n` + newReport;
-            document.getElementById('report-text').value = newReport;
-        });
     }
 
-    function copyReport() {
-        const text = document.getElementById('report-text');
-        text.select();
-        document.execCommand('copy');
-        showMessage("📋 成績單已複製！");
+    // --- 複製文字報告 ---
+    function copyTextReport() {
+        const nameInput = document.getElementById('student-name').value.trim();
+        const studentName = nameInput === "" ? "未填寫姓名" : nameInput;
+        const reportArea = document.getElementById('report-text');
+        
+        const finalContent = `學號/姓名：${studentName}\n-----------------------\n${reportArea.value}`;
+        
+        // 兼容性較好的複製方法
+        const tempTextArea = document.createElement("textarea");
+        tempTextArea.value = finalContent;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        try {
+            document.execCommand('copy');
+            showMessage("📋 成績單已成功複製！可以貼上給老師了。");
+        } catch (err) {
+            showMessage("❌ 複製失敗，請手動全選文字並複製。");
+        }
+        document.body.removeChild(tempTextArea);
     }
 
+    // --- 下載圖片報告 (支援手寫截圖) ---
     function downloadImageReport() {
+        showMessage("⏳ 正在生成圖片，請稍候...");
         const summaryBox = document.getElementById('summary-box');
-        const nameInput = document.getElementById('student-name').value;
-        const title = document.getElementById('summary-title');
-        const originalTitle = title.innerText;
+        const nameInput = document.getElementById('student-name');
+        const originalName = nameInput.value.trim() || '學生';
+
+        // 隱藏不必要的按鈕以確保畫面乾淨
+        const controls = summaryBox.querySelector('.controls');
+        controls.style.display = 'none';
         
-        if (nameInput) {
-            title.innerText = `📄 ${nameInput} 的手寫功課`;
+        // 如果輸入框為空，暫時顯示為提示文字以便截圖
+        const oldPlaceholder = nameInput.placeholder;
+        if(nameInput.value === "") {
+            nameInput.placeholder = "姓名：未填寫";
         }
 
-        document.getElementById('btn-download-img').style.display = 'none';
-        document.getElementById('btn-switch-mode').style.display = 'none';
-        const btns = summaryBox.querySelectorAll('.btn');
-        btns.forEach(b => b.style.display = 'none');
+        html2canvas(summaryBox, { 
+            backgroundColor: '#ffffff',
+            scale: 1.5 // 提高解析度
+        }).then(canvas => {
+            // 恢復按鈕與提示文字
+            controls.style.display = 'flex';
+            nameInput.placeholder = oldPlaceholder;
 
-        html2canvas(summaryBox, { scale: 2 }).then(canvas => {
+            // 觸發下載
             const link = document.createElement('a');
-            link.download = `手寫默書成績_${nameInput || '未命名'}.png`;
+            link.download = `默書成績單_${originalName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-
-            title.innerText = originalTitle;
-            document.getElementById('btn-download-img').style.display = 'inline-block';
-            document.getElementById('btn-switch-mode').style.display = 'inline-block';
-            btns.forEach(b => b.style.display = 'inline-block');
-            showMessage("🖼️ 圖片下載成功！");
+            showMessage("✅ 圖片下載成功！可繳交功課。");
+        }).catch(err => {
+            console.error(err);
+            controls.style.display = 'flex';
+            showMessage("❌ 生成圖片失敗，請重試。");
         });
     }
+
+    // 初始化：預設載入字詞卡模式
+    window.onload = () => {
+        switchMode('flashcard');
+    };
+
 </script>
 </body>
 </html>
