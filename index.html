@@ -222,6 +222,24 @@
             font-weight: bold;
         }
         
+        /* 新增：圖像提示樣式 */
+        .visual-hint {
+            font-size: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 70px;
+            height: 70px;
+            background: #fff9c4;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #fbc02d;
+            transition: transform 0.3s;
+        }
+        .visual-hint:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
         /* 新增：讀寫障礙友善提示區 */
         .hint-badge {
             display: inline-block;
@@ -418,7 +436,12 @@
         <div class="progress" id="dic-progress">第 1 / 16 題</div>
         
         <div class="audio-controls">
-            <button class="play-btn" onclick="playAudio()">🔊</button>
+            <!-- 將發音按鈕與圖像提示並排 -->
+            <div style="display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 5px;">
+                <div id="dic-img-hint" class="visual-hint" title="圖像提示">🏛️</div>
+                <button class="play-btn" onclick="playAudio()">🔊</button>
+            </div>
+            
             <div class="english-hint" id="dic-hint">Landmarks (n.)</div>
             
             <!-- 專為讀寫障礙新增的提示區 -->
@@ -426,7 +449,7 @@
             
             <div class="peek-controls" id="dic-peek-controls">
                 <button class="btn btn-secondary btn-sm" onclick="showFirstChar()">🔠 首字提示</button>
-                <button class="btn btn-secondary btn-sm" onclick="peekWord()">👀 閃卡記憶 (看2秒)</button>
+                <button id="btn-peek" class="btn btn-secondary btn-sm" onclick="peekWord()">👀 閃卡記憶 (看2秒)</button>
             </div>
         </div>
 
@@ -475,10 +498,10 @@
             </div>
             
             <div class="controls">
-                <button class="btn btn-primary" id="btn-copy-report" onclick="copyTextReport()">📋 複製成績單給老師</button>
-                <button class="btn btn-warning" id="btn-download-img" style="display:none;" onclick="downloadImageReport()">🖼️ 下載成績單圖片</button>
-                <button class="btn btn-secondary" onclick="resetCurrentMode()">🔄 再挑戰一次</button>
-                <button class="btn" id="btn-switch-mode" style="background: #9b59b6; color: white;" onclick="switchOppositeMode()">➡️ 嘗試另一模式</button>
+                <button class="btn btn-primary" id="btn-copy-report" onclick="copyTextReport()">📋 複製成績單</button>
+                <button class="btn btn-warning" id="btn-download-img" style="display:none;" onclick="downloadImageReport()">🖼️ 下載圖片</button>
+                <button class="btn btn-secondary" onclick="resetCurrentMode()">🔄 再戰一次</button>
+                <button class="btn" id="btn-switch-mode" style="background: #9b59b6; color: white;" onclick="switchOppositeMode()">➡️ 另一模式</button>
             </div>
         </div>
     </div>
@@ -508,24 +531,24 @@
         { q: "說明手法：對比差異或相似之處來說明", hint: "例：柴油引擎 vs 汽油引擎", a: "比較說明" }
     ];
 
-    // 新增 jyutping (粵拼) 提示，幫助讀寫障礙學生建立語音與字形的連結
+    // 新增 jyutping (粵拼) 及 icon (圖像) 提示，幫助讀寫障礙學生建立多重連結
     const dictationData = [
-        { word: "名勝古跡", hint: "Landmarks (n.)", jp: "ming4 sing3 gu2 zik1" },
-        { word: "雄奇", hint: "Grand (adj.)", jp: "hung4 kei4" },
-        { word: "著名", hint: "Famous (adj.)", jp: "zyu3 ming4" },
-        { word: "神態各異", hint: "Diverse (adj.)", jp: "san4 taai3 gok3 ji6" },
-        { word: "舉世罕見", hint: "Rare (adj.)", jp: "geoi2 sai3 hon2 gin3" },
-        { word: "久經沙場", hint: "Veteran (adj.)", jp: "gau2 ging1 saa1 coeng4" },
-        { word: "轟動", hint: "Sensational (adj.)", jp: "gwang1 dung6" },
-        { word: "巍然", hint: "Towering (adj.)", jp: "ngai4 jin4" },
-        { word: "夙願", hint: "Wish (n.)", jp: "suk1 jyun6" },
-        { word: "堅毅", hint: "Resolute (adj.)", jp: "gin1 ngai6" },
-        { word: "建築", hint: "Building (n.)", jp: "gin3 zuk1" },
-        { word: "意氣昂揚", hint: "Spirited (adj.)", jp: "ji3 hei3 ngong4 joeng4" },
-        { word: "踉蹌", hint: "Stumbling (adj.)", jp: "loeng6 coeng3" },
-        { word: "風馳電掣", hint: "Fast (adj.)", jp: "fung1 ci4 din6 zai3" },
-        { word: "威嚴", hint: "Majestic (adj.)", jp: "wai1 jim4" },
-        { word: "粗獷", hint: "Rugged (adj.)", jp: "cou1 kwong3" }
+        { word: "名勝古跡", hint: "Landmarks (n.)", jp: "ming4 sing3 gu2 zik1", icon: "🏛️" },
+        { word: "雄奇", hint: "Grand (adj.)", jp: "hung4 kei4", icon: "⛰️" },
+        { word: "著名", hint: "Famous (adj.)", jp: "zyu3 ming4", icon: "🌟" },
+        { word: "神態各異", hint: "Diverse (adj.)", jp: "san4 taai3 gok3 ji6", icon: "🎭" },
+        { word: "舉世罕見", hint: "Rare (adj.)", jp: "geoi2 sai3 hon2 gin3", icon: "💎" },
+        { word: "久經沙場", hint: "Veteran (adj.)", jp: "gau2 ging1 saa1 coeng4", icon: "⚔️" },
+        { word: "轟動", hint: "Sensational (adj.)", jp: "gwang1 dung6", icon: "🌋" },
+        { word: "巍然", hint: "Towering (adj.)", jp: "ngai4 jin4", icon: "🏔️" },
+        { word: "夙願", hint: "Wish (n.)", jp: "suk1 jyun6", icon: "🌠" },
+        { word: "堅毅", hint: "Resolute (adj.)", jp: "gin1 ngai6", icon: "🧗" },
+        { word: "建築", hint: "Building (n.)", jp: "gin3 zuk1", icon: "🏗️" },
+        { word: "意氣昂揚", hint: "Spirited (adj.)", jp: "ji3 hei3 ngong4 joeng4", icon: "🦅" },
+        { word: "踉蹌", hint: "Stumbling (adj.)", jp: "loeng6 coeng3", icon: "🤕" },
+        { word: "風馳電掣", hint: "Fast (adj.)", jp: "fung1 ci4 din6 zai3", icon: "⚡" },
+        { word: "威嚴", hint: "Majestic (adj.)", jp: "wai1 jim4", icon: "👑" },
+        { word: "粗獷", hint: "Rugged (adj.)", jp: "cou1 kwong3", icon: "🐗" }
     ];
 
     // --- 全局狀態 ---
@@ -660,6 +683,7 @@
     const gridsWrapper = document.getElementById('grids-wrapper');
     const dicHint = document.getElementById('dic-hint');
     const dicJp = document.getElementById('dic-jp');
+    const dicImgHint = document.getElementById('dic-img-hint');
     const dicAns = document.getElementById('dic-answer');
     const dicProg = document.getElementById('dic-progress');
     const synth = window.speechSynthesis;
@@ -677,6 +701,7 @@
         const current = dictationData[dicIndex];
         dicHint.innerText = current.hint;
         dicJp.innerText = "粵音：" + (current.jp || "無");
+        dicImgHint.innerText = current.icon || "🖼️";
         dicProg.innerText = `第 ${dicIndex + 1} / ${dictationData.length} 題`;
         dicAns.innerText = "";
         dicAns.style.color = "#27ae60"; // 重置顏色
@@ -686,6 +711,15 @@
         document.getElementById('dic-peek-controls').style.display = 'flex';
         isDrawingEnabled = true;
         
+        // 恢復閃卡記憶按鈕狀態 (每題只能用一次)
+        const btnPeek = document.getElementById('btn-peek');
+        if(btnPeek) {
+            btnPeek.disabled = false;
+            btnPeek.innerText = "👀 閃卡記憶 (看2秒)";
+            btnPeek.style.opacity = "1";
+            btnPeek.style.cursor = "pointer";
+        }
+
         generateGrids(current.word.length);
         playAudio();
     }
@@ -693,6 +727,16 @@
     // --- 讀寫障礙友善功能：閃卡記憶 (偷看一眼) ---
     function peekWord() {
         if (!isDrawingEnabled) return;
+
+        // 點擊後立即禁用按鈕，確保每題只能看一次
+        const btnPeek = document.getElementById('btn-peek');
+        if(btnPeek) {
+            btnPeek.disabled = true;
+            btnPeek.innerText = "👀 閃卡記憶 (已使用)";
+            btnPeek.style.opacity = "0.5";
+            btnPeek.style.cursor = "not-allowed";
+        }
+
         const current = dictationData[dicIndex];
         dicAns.innerText = current.word;
         dicAns.style.color = "#9b59b6"; // 用紫色區分這是提示
@@ -907,115 +951,134 @@
         document.getElementById('summary-score').innerText = `${percentage}%`;
         document.getElementById('summary-text').innerText = `你在「${modeName}」模式中，答對了 ${score} / ${totalQ} 題。`;
 
-        // 構建純文字報告
+        // 構建純文字報告與DOM元素
         const reportTextarea = document.getElementById('report-text');
-        let reportContent = `📝 【測驗成績單】\n模式：${modeName}\n分數：${score} / ${totalQ} (${percentage}%)\n`;
-        const now = new Date();
-        reportContent += `完成時間：${now.toLocaleString('zh-HK')}\n\n`;
-
-        if (mistakes.length > 0) {
-            reportContent += `📉 建議重溫以下項目：\n`;
-            mistakes.forEach((m, i) => {
-                reportContent += `${i + 1}. ${m}\n`;
-            });
-        } else {
-            reportContent += `🎉 太棒了！全部答對，完美過關！\n`;
-        }
-        reportTextarea.value = reportContent;
-
-        // 處理視覺化報告 (默書模式)
-        const visualReportContainer = document.getElementById('visual-report-container');
-        const btnDownloadImg = document.getElementById('btn-download-img');
+        const studentInput = document.getElementById('student-name');
+        const visualReport = document.getElementById('visual-report-container');
         const historyTbody = document.getElementById('history-tbody');
+        const btnDownloadImg = document.getElementById('btn-download-img');
 
+        // 生成文字報告的函數
+        const generateReportString = () => {
+            const name = studentInput.value.trim() || "未具名學生";
+            let text = `【溫習成績單】\n學生：${name}\n模式：${modeName}\n成績：${score} / ${totalQ} (${percentage}%)\n`;
+            if (mistakes.length > 0) {
+                text += `\n需要重點溫習的項目：\n`;
+                mistakes.forEach((m, idx) => {
+                    text += `${idx + 1}. ${m}\n`;
+                });
+            } else {
+                text += `\n太棒了！全部正確，繼續保持！\n`;
+            }
+            text += `\n完成時間：${new Date().toLocaleString()}`;
+            return text;
+        };
+
+        // 初始填充及綁定事件
+        reportTextarea.value = generateReportString();
+        studentInput.oninput = () => {
+            reportTextarea.value = generateReportString();
+        };
+
+        // 根據模式決定是否顯示手寫紀錄表格
         if (mode === 'dictation') {
-            visualReportContainer.style.display = 'block';
+            visualReport.style.display = 'block';
             btnDownloadImg.style.display = 'inline-block';
             historyTbody.innerHTML = ''; // 清空舊資料
-
-            dicRecords.forEach(record => {
+            
+            dicRecords.forEach((record) => {
                 const tr = document.createElement('tr');
-                const statusStr = record.isCorrect ? '<span style="color: #27ae60;">✅</span>' : '<span style="color: #e74c3c;">❌</span>';
-                const imgSrc = record.image ? `<img src="${record.image}" class="history-img" alt="手寫圖片">` : '<span style="color:#999;">未作答</span>';
                 
-                tr.innerHTML = `
-                    <td style="font-weight: bold; font-size: 18px;">${record.word}</td>
-                    <td>${imgSrc}</td>
-                    <td style="font-size: 24px;">${statusStr}</td>
-                `;
+                const tdAns = document.createElement('td');
+                tdAns.innerText = record.word;
+                tdAns.style.fontSize = "18px";
+                tdAns.style.fontWeight = "bold";
+                
+                const tdImg = document.createElement('td');
+                if (record.image) {
+                    const img = document.createElement('img');
+                    img.src = record.image;
+                    img.className = 'history-img';
+                    tdImg.appendChild(img);
+                } else {
+                    tdImg.innerText = "(無紀錄)";
+                }
+                
+                const tdEval = document.createElement('td');
+                tdEval.innerText = record.isCorrect ? "✅" : "❌";
+                
+                tr.appendChild(tdAns);
+                tr.appendChild(tdImg);
+                tr.appendChild(tdEval);
                 historyTbody.appendChild(tr);
             });
         } else {
-            visualReportContainer.style.display = 'none';
+            visualReport.style.display = 'none';
             btnDownloadImg.style.display = 'none';
         }
     }
 
-    // --- 複製文字報告 ---
+    // 複製純文字報告
     function copyTextReport() {
-        const nameInput = document.getElementById('student-name').value.trim();
-        const studentName = nameInput === "" ? "未填寫姓名" : nameInput;
-        const reportArea = document.getElementById('report-text');
-        
-        const finalContent = `學號/姓名：${studentName}\n-----------------------\n${reportArea.value}`;
-        
-        // 兼容性較好的複製方法
-        const tempTextArea = document.createElement("textarea");
-        tempTextArea.value = finalContent;
-        document.body.appendChild(tempTextArea);
-        tempTextArea.select();
-        try {
-            document.execCommand('copy');
-            showMessage("📋 成績單已成功複製！可以貼上給老師了。");
-        } catch (err) {
-            showMessage("❌ 複製失敗，請手動全選文字並複製。");
-        }
-        document.body.removeChild(tempTextArea);
+        const reportTextarea = document.getElementById('report-text');
+        reportTextarea.select();
+        reportTextarea.setSelectionRange(0, 99999); // 兼容手機
+        document.execCommand('copy');
+        showMessage("✅ 報告已成功複製！可以貼上給老師了。");
     }
 
-    // --- 下載圖片報告 (支援手寫截圖) ---
+    // 下載截圖報告 (使用 html2canvas)
     function downloadImageReport() {
-        showMessage("⏳ 正在生成圖片，請稍候...");
         const summaryBox = document.getElementById('summary-box');
-        const nameInput = document.getElementById('student-name');
-        const originalName = nameInput.value.trim() || '學生';
-
-        // 隱藏不必要的按鈕以確保畫面乾淨
         const controls = summaryBox.querySelector('.controls');
-        controls.style.display = 'none';
+        const nameInput = document.getElementById('student-name');
         
-        // 如果輸入框為空，暫時顯示為提示文字以便截圖
-        const oldPlaceholder = nameInput.placeholder;
-        if(nameInput.value === "") {
-            nameInput.placeholder = "姓名：未填寫";
-        }
+        // 暫時隱藏按鈕群組，並將輸入框轉為純文字標籤以獲得更好的截圖排版
+        controls.style.display = 'none';
+        const tempSpan = document.createElement('div');
+        tempSpan.style.fontSize = "20px";
+        tempSpan.style.fontWeight = "bold";
+        tempSpan.style.color = "var(--primary)";
+        tempSpan.style.marginBottom = "20px";
+        tempSpan.innerText = "學生姓名：" + (nameInput.value || "未具名");
+        
+        nameInput.parentNode.insertBefore(tempSpan, nameInput);
+        nameInput.style.display = 'none';
 
+        showMessage("📸 正在產生圖片報告，請稍候...");
+
+        // 進行截圖
         html2canvas(summaryBox, { 
-            backgroundColor: '#ffffff',
-            scale: 1.5 // 提高解析度
+            scale: 2, // 提高解析度
+            backgroundColor: "#ffffff",
+            useCORS: true
         }).then(canvas => {
-            // 恢復按鈕與提示文字
-            controls.style.display = 'flex';
-            nameInput.placeholder = oldPlaceholder;
-
-            // 觸發下載
+            // 創建連結並觸發下載
             const link = document.createElement('a');
-            link.download = `默書成績單_${originalName}.png`;
+            link.download = `手寫默書成績單_${nameInput.value || '未具名'}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            showMessage("✅ 圖片下載成功！可繳交功課。");
-        }).catch(err => {
-            console.error(err);
+            
+            // 恢復原本的介面狀態
             controls.style.display = 'flex';
-            showMessage("❌ 生成圖片失敗，請重試。");
+            nameInput.style.display = 'inline-block';
+            tempSpan.remove();
+            showMessage("✅ 圖片下載成功！");
+        }).catch(err => {
+            console.error("截圖失敗: ", err);
+            // 發生錯誤也要恢復介面
+            controls.style.display = 'flex';
+            nameInput.style.display = 'inline-block';
+            tempSpan.remove();
+            showMessage("❌ 圖片產生失敗，請再試一次。");
         });
     }
 
-    // 初始化：預設載入字詞卡模式
+    // --- 初始化執行 ---
     window.onload = () => {
+        // 預設開啟字詞卡模式
         switchMode('flashcard');
     };
-
 </script>
 </body>
 </html>
